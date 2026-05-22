@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>墨灵 · AI写作伙伴 | 平台切换+自定义字数</title>
+    <title>墨灵 · AI写作伙伴 | 最新模型+自定义字数</title>
     <style>
         :root {
             --bg-primary: #faf8f5;
@@ -80,7 +80,6 @@
         .toast { background:#2c2416; color:#fff; padding:12px 20px; border-radius:24px; font-size:0.82rem; animation:toastIn 0.4s, toastOut 0.3s 2.5s forwards; }
         @keyframes toastIn { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
         @keyframes toastOut { to{opacity:0;transform:translateX(40px)} }
-        /* 设置面板 */
         .settings-panel { display:none; position:fixed; top:70px; right:24px; background:var(--bg-card); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); padding:20px; width:380px; max-width:90vw; z-index:200; border:1px solid var(--border); max-height:80vh; overflow-y:auto; }
         .settings-panel.active { display:block; }
         .settings-panel label { font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-top:8px; }
@@ -98,7 +97,6 @@
 <body>
     <div class="overlay-bg" id="overlayBg" onclick="closeSettings()"></div>
 
-    <!-- 侧边栏 (保持原样) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="ai-avatar-container" id="avatarContainer">
@@ -106,7 +104,7 @@
                 <div class="ai-status-dot" id="statusDot"></div>
             </div>
             <div class="ai-name">墨灵</div>
-            <div class="ai-tagline">AI写作伙伴 · 增强版</div>
+            <div class="ai-tagline">AI写作伙伴 · 最新模型</div>
         </div>
         <nav class="sidebar-nav">
             <span class="sidebar-nav-label">写作类型</span>
@@ -124,7 +122,6 @@
         </div>
     </aside>
 
-    <!-- 主区域 -->
     <main class="main-area">
         <div class="topbar">
             <input type="text" class="doc-title-input" id="docTitle" placeholder="未命名文档">
@@ -135,11 +132,10 @@
             </button>
         </div>
 
-        <!-- API设置面板 (新增平台快捷选择) -->
         <div class="settings-panel" id="settingsPanel">
-            <h3 style="margin-bottom:10px; color:var(--accent);">🔌 连接 AI 大脑</h3>
+            <h3 style="margin-bottom:10px; color:var(--accent);">🔌 连接 AI 大脑 (最新模型)</h3>
             <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">
-                选择平台自动填充地址和模型，也可手动修改。
+                选择平台自动填充最新模型，也可手动修改。
             </p>
             <label>🌐 快捷平台</label>
             <select id="platformSelect" onchange="onPlatformChange()">
@@ -157,9 +153,9 @@
             <input type="text" id="apiBaseInput" value="https://api.openai.com/v1">
             <label>🧠 模型名称</label>
             <select id="modelSelect" onchange="onModelSelectChange()">
-                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-5.2">gpt-5.2</option>
+                <option value="gpt-5.1">gpt-5.1</option>
                 <option value="gpt-4o">gpt-4o</option>
-                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
                 <option value="custom">自定义模型</option>
             </select>
             <input type="text" id="customModelInput" placeholder="输入模型ID" style="display:none; margin-top:4px;">
@@ -218,7 +214,7 @@
                 isGenerating: false,
                 selectedParams: {
                     style: 'natural',
-                    length: 'medium', // 可能为 'short','medium','long' 或数字字符串如 "2000"
+                    length: 'medium',
                     creativity: 'balanced'
                 },
                 history: [],
@@ -226,7 +222,7 @@
                     platform: 'custom',
                     key: '',
                     baseURL: 'https://api.openai.com/v1',
-                    model: 'gpt-4o-mini'
+                    model: 'gpt-5.2'
                 }
             };
 
@@ -324,11 +320,10 @@
                 showToast(`已切换至「${btn.textContent.trim()}」模式`);
             };
 
-            // 参数切换 (风格、创意)
             window.toggleChip = chip => {
                 const param = chip.dataset.param;
                 const val = chip.dataset.val;
-                if (param === 'length') return; // 字数单独处理
+                if (param === 'length') return;
                 document.querySelectorAll(`.chip[data-param="${param}"]`).forEach(c=>c.classList.remove('selected'));
                 chip.classList.add('selected');
                 state.selectedParams[param] = val;
@@ -336,16 +331,12 @@
                 showToast(`已选择: ${chip.textContent.trim()}`);
             };
 
-            // 自定义字数模块
             window.setLength = (length, chip) => {
-                // 移除所有长度 chips 的选中状态
                 document.querySelectorAll(`.chip[data-param="length"]`).forEach(c=>c.classList.remove('selected'));
                 if (length === 'custom') {
-                    // 激活自定义输入
                     customLengthChip.classList.add('selected');
                     customLengthInput.style.display = 'inline-block';
                     customLengthInput.focus();
-                    // 不清除已有数字
                 } else {
                     chip.classList.add('selected');
                     customLengthChip.classList.remove('selected');
@@ -357,7 +348,6 @@
 
             window.activateCustomLength = () => {
                 if (customLengthChip.classList.contains('selected')) {
-                    // 再次点击取消自定义，回到中篇
                     setLength('medium', document.querySelector('.chip[data-param="length"][data-val="medium"]'));
                     return;
                 }
@@ -369,23 +359,19 @@
                 if (val && val >= 50 && val <= 20000) {
                     state.selectedParams.length = val.toString();
                     customLengthChip.classList.add('selected');
-                    // 更新显示
                     customLengthChip.childNodes[0].textContent = `自定义${val}字 `;
                     showToast(`字数已设为 ${val} 字`);
                 } else if (customLengthInput.value.trim() !== '') {
                     showToast('字数范围50-20000，请输入有效数字');
                     customLengthInput.value = '';
                 }
-                // 保存
                 localStorage.setItem('moli_params', JSON.stringify(state.selectedParams));
             };
 
             const updateParamsUI = () => {
-                // 更新风格、创意 chips
                 document.querySelectorAll('.chip[data-param="style"], .chip[data-param="creativity"]').forEach(c=>{
                     c.classList.toggle('selected', c.dataset.val === state.selectedParams[c.dataset.param]);
                 });
-                // 更新长度 chips
                 const lenVal = state.selectedParams.length;
                 document.querySelectorAll('.chip[data-param="length"]').forEach(c=>c.classList.remove('selected'));
                 if (lenVal === 'short' || lenVal === 'medium' || lenVal === 'long') {
@@ -394,7 +380,6 @@
                     customLengthChip.classList.remove('selected');
                     customLengthInput.style.display = 'none';
                 } else {
-                    // 自定义数字
                     customLengthChip.classList.add('selected');
                     customLengthInput.style.display = 'inline-block';
                     customLengthInput.value = lenVal;
@@ -402,26 +387,42 @@
                 }
             };
 
-            // API 平台切换
+            // 最新平台与模型预设 (截至2026-05)
             const platforms = {
-                openai: { base: 'https://api.openai.com/v1', models: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'], defaultModel: 'gpt-4o-mini' },
-                kimi: { base: 'https://api.moonshot.cn/v1', models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'], defaultModel: 'moonshot-v1-8k' },
-                deepseek: { base: 'https://api.deepseek.com/v1', models: ['deepseek-chat', 'deepseek-reasoner'], defaultModel: 'deepseek-chat' },
-                qwen: { base: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen-turbo', 'qwen-plus', 'qwen-max'], defaultModel: 'qwen-plus' },
-                zhipu: { base: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4-flash', 'glm-4', 'glm-4-plus'], defaultModel: 'glm-4-flash' }
+                openai: {
+                    base: 'https://api.openai.com/v1',
+                    models: ['gpt-5.2', 'gpt-5.1', 'gpt-4o'],
+                    defaultModel: 'gpt-5.2'
+                },
+                kimi: {
+                    base: 'https://api.moonshot.cn/v1',
+                    models: ['kimi-k2.6', 'kimi-k2.5', 'kimi-k2.5-thinking'],
+                    defaultModel: 'kimi-k2.6'
+                },
+                deepseek: {
+                    base: 'https://api.deepseek.com/v1',
+                    models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-v3.2'],
+                    defaultModel: 'deepseek-v4-pro'
+                },
+                qwen: {
+                    base: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+                    models: ['qwen3.7-max', 'qwen3.7-plus', 'qwen3.6-max', 'qwen3.6-plus', 'qwen-turbo'],
+                    defaultModel: 'qwen3.7-max'
+                },
+                zhipu: {
+                    base: 'https://open.bigmodel.cn/api/paas/v4',
+                    models: ['GLM-4.7-Flash', 'GLM-4.7', 'GLM-4.5-Flash'],
+                    defaultModel: 'GLM-4.7-Flash'
+                }
             };
 
             window.onPlatformChange = () => {
                 const platform = $('#platformSelect').value;
                 state.api.platform = platform;
-                if (platform === 'custom') {
-                    // 保留当前填写值
-                    return;
-                }
+                if (platform === 'custom') return;
                 const p = platforms[platform];
                 if (p) {
                     $('#apiBaseInput').value = p.base;
-                    // 更新模型下拉框
                     const modelSelect = $('#modelSelect');
                     modelSelect.innerHTML = '';
                     p.models.forEach(m => {
@@ -430,7 +431,6 @@
                         opt.textContent = m;
                         modelSelect.appendChild(opt);
                     });
-                    // 添加自定义选项
                     const customOpt = document.createElement('option');
                     customOpt.value = 'custom';
                     customOpt.textContent = '自定义模型';
@@ -449,13 +449,10 @@
                 }
             };
 
-            // 初始化设置面板
             const initSettingsPanel = () => {
-                // 根据已保存的 api 设置恢复界面
                 if (state.api.platform && state.api.platform !== 'custom') {
                     $('#platformSelect').value = state.api.platform;
-                    onPlatformChange(); // 会填充 models
-                    // 再覆盖模型值
+                    onPlatformChange();
                     if (state.api.model) {
                         if ($('#modelSelect').querySelector(`option[value="${state.api.model}"]`)) {
                             $('#modelSelect').value = state.api.model;
@@ -467,7 +464,6 @@
                     }
                 } else {
                     $('#platformSelect').value = 'custom';
-                    // 恢复 baseURL 和 model
                     $('#apiBaseInput').value = state.api.baseURL;
                     if (state.api.model) {
                         if ($('#modelSelect').querySelector(`option[value="${state.api.model}"]`)) {
@@ -506,7 +502,6 @@
                     state.api.key = keyInput;
                 }
                 localStorage.setItem('moli_api', JSON.stringify(state.api));
-                // 更新顶部按钮状态
                 if (state.api.key) {
                     apiStatusText.textContent = '已连接';
                     btnApiToggle.classList.add('active');
@@ -522,7 +517,6 @@
                 const key = $('#apiKeyInput').value.trim();
                 const base = $('#apiBaseInput').value.trim().replace(/\/+$/, '');
                 if (!key || key.startsWith('...')) {
-                    // 使用已保存的 key
                     if (!state.api.key) return showToast('请先输入有效的API密钥');
                 }
                 const finalKey = key.startsWith('...') ? state.api.key : key;
@@ -544,7 +538,6 @@
                 }
             };
 
-            // 核心生成
             const generateWithAPI = async (prompt) => {
                 const styleMap = { academic:'严谨学术', literary:'优美文学', natural:'自然流畅', humorous:'幽默风趣' };
                 const creativityMap = { conservative:'保守', balanced:'平衡', creative:'富有创意' };
@@ -554,7 +547,7 @@
                 if (length === 'short') lengthInstruction = '约500字';
                 else if (length === 'medium') lengthInstruction = '约1500字';
                 else if (length === 'long') lengthInstruction = '约3000字';
-                else lengthInstruction = `约${length}字`; // 自定义数字
+                else lengthInstruction = `约${length}字`;
 
                 const systemPrompt = `你是一位专业作家，擅长${typeNames[state.currentType]}写作。风格：${styleMap[state.selectedParams.style]}。创意度：${creativityMap[state.selectedParams.creativity]}。请严格将输出字数控制在${lengthInstruction}左右。直接输出内容，不要任何解释。`;
                 const body = {
@@ -565,7 +558,6 @@
                     ],
                     temperature: state.selectedParams.creativity==='creative'?0.9: (state.selectedParams.creativity==='conservative'?0.3:0.7),
                 };
-                // 粗略 max_tokens 估算：1汉字约2 token
                 if (length === 'short') body.max_tokens = 1200;
                 else if (length === 'medium') body.max_tokens = 3500;
                 else if (length === 'long') body.max_tokens = 7000;
@@ -622,7 +614,6 @@
                         await sleep(1500);
                         content = generateMock(prompt);
                     }
-                    // 流式显示
                     avatarCircle.classList.remove('thinking');
                     avatarCircle.classList.add('writing');
                     for(let i=0; i<content.length; i++) {
@@ -647,7 +638,6 @@
                 }
             };
 
-            // 头像点击中止
             $('#avatarContainer').addEventListener('click', ()=>{
                 if(state.isGenerating) {
                     state.isGenerating = false;
@@ -658,13 +648,11 @@
                 }
             });
 
-            // 快捷键
             document.addEventListener('keydown', e => {
                 if((e.ctrlKey||e.metaKey) && e.key==='Enter') { e.preventDefault(); startGenerate(); }
                 if((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveHistory(); showToast('💾 已保存'); }
             });
 
-            // 编辑器功能
             window.insertMarkdown = (before,after) => {
                 const start = editor.selectionStart, end = editor.selectionEnd;
                 editor.setRangeText(before+editor.value.substring(start,end)+after, start, end, 'select');
@@ -693,7 +681,6 @@
                 }
             };
 
-            // 初始化
             loadHistory();
             updateWordCount();
             updateParamsUI();
@@ -701,7 +688,7 @@
                 apiStatusText.textContent = '已连接';
                 btnApiToggle.classList.add('active');
             }
-            console.log('🖋️ 墨灵 AI 写作伙伴 v2.0 已就绪');
+            console.log('🖋️ 墨灵 AI 写作伙伴 v2.0 (最新模型) 已就绪');
         })();
     </script>
 </body>
