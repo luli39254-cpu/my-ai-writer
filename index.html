@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墨灵 · AI写作伙伴 | 论文·小说·散文</title>
+    <style>
+        :root {
+            --bg-primary: #faf8f5;
+            --bg-secondary: #f0ede8;
+            --bg-card: #ffffff;
+            --bg-editor: #fdfcf9;
+            --text-primary: #2c2416;
+            --text-secondary: #6b5e4a;
+            --text-muted: #9b8d7a;
+            --accent: #c47f3b;
+            --accent-light: #e8c9a0;
+            --accent-glow: #f5e1c8;
+            --border: #e5ded4;
+            --border-light: #f0ebe2;
+            --shadow-sm: 0 1px 3px rgba(44, 36, 22, 0.06);
+            --shadow-md: 0 4px 16px rgba(44, 36, 22, 0.08);
+            --shadow-lg: 0 12px 40px rgba(44, 36, 22, 0.12);
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --font-editor: 'Georgia', 'Noto Serif SC', 'STSong', 'Songti SC', 'SimSun', serif;
+            --font-ui: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: transform var(--transition), box-shadow var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .ai-avatar-container {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 14px;
+            cursor: pointer;
+            transition: transform var(--transition);
+            user-select: none;
+        }
+        .ai-avatar-container:active {
+            transform: scale(0.95);
+        }
+
+        .ai-avatar-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #fdf3e4, #f7dfc2, #e8c9a0, #d4a870);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 24px rgba(196, 127, 59, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.5);
+            transition: all 0.4s;
+        }
+        .ai-avatar-circle.thinking {
+            animation: avatarPulse 1.2s ease-in-out infinite;
+        }
+        .ai-avatar-circle.writing {
+            animation: avatarGlow 0.8s ease-in-out infinite;
+        }
+
+        @keyframes avatarPulse {
+            0%,
+            100% {
+                box-shadow: 0 6px 24px rgba(196, 127, 59, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 8px 36px rgba(196, 127, 59, 0.45);
+                transform: scale(1.03);
+            }
+        }
+        @keyframes avatarGlow {
+            0%,
+            100% {
+                box-shadow: 0 6px 32px rgba(196, 127, 59, 0.45);
+            }
+            50% {
+                box-shadow: 0 8px 44px rgba(196, 127, 59, 0.7);
+            }
+        }
+
+        .ai-face {
+            font-size: 38px;
+            line-height: 1;
+            pointer-events: none;
+        }
+        .ai-face::after {
+            content: '😊';
+        }
+        .ai-avatar-circle.thinking .ai-face::after {
+            content: '🤔';
+            animation: faceTilt 1.5s infinite;
+        }
+        .ai-avatar-circle.writing .ai-face::after {
+            content: '✍️';
+            animation: faceBounce 0.6s infinite;
+        }
+        @keyframes faceTilt {
+            0%,
+            100% {
+                transform: rotate(0);
+            }
+            25% {
+                transform: rotate(-8deg);
+            }
+            75% {
+                transform: rotate(8deg);
+            }
+        }
+        @keyframes faceBounce {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .ai-status-dot {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #8bc34a;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        .ai-status-dot.busy {
+            background: #ff9800;
+            animation: dotBlink 0.7s infinite;
+        }
+        @keyframes dotBlink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .ai-name {
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+        .ai-tagline {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar-nav-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            padding: 8px 10px 4px;
+            font-weight: 600;
+        }
+        .type-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: var(--font-ui);
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            text-align: left;
+            font-weight: 500;
+            position: relative;
+        }
+        .type-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .type-btn.active {
+            background: var(--accent-glow);
+            color: var(--accent);
+            font-weight: 700;
+            box-shadow: inset 0 0 0 2px var(--accent-light);
+        }
+        .type-btn .type-icon {
+            font-size: 1.3rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+        }
+        .type-btn.active .type-icon {
+            background: #fff;
+            box-shadow: var(--shadow-sm);
+        }
+        .type-btn .type-badge {
+            margin-left: auto;
+            font-size: 0.68rem;
+            background: var(--bg-secondary);
+            padding: 3px 8px;
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+        .type-btn.active .type-badge {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sidebar-footer .btn-outline {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-family: var(--font-ui);
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            font-weight: 500;
+        }
+        .sidebar-footer .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* 主区域 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 100%;
+        }
+
+        .topbar {
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-card);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+        }
+        .doc-title-input {
+            flex: 1;
+            min-width: 180px;
+            border: none;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: var(--font-ui);
+            color: var(--text-primary);
+            background: transparent;
+            outline: none;
+            padding: 6px 0;
+        }
+        .doc-title-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .topbar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            padding: 9px 18px;
+            border-radius: 24px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(196, 127, 59, 0.35);
+        }
+        .btn-primary:hover {
+            background: #b57330;
+            box-shadow: 0 6px 20px rgba(196, 127, 59, 0.5);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+        .btn-primary:disabled {
+            background: #d4b896;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid transparent;
+        }
+        .btn-ghost:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            border-radius: 20px;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 28px 32px;
+            overflow-y: auto;
+            gap: 16px;
+        }
+
+        .prompt-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+        }
+        .prompt-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .prompt-input-wrap {
+            flex: 1;
+            min-width: 220px;
+        }
+        .prompt-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-family: var(--font-ui);
+            resize: none;
+            background: var(--bg-editor);
+            color: var(--text-primary);
+            transition: all var(--transition);
+            min-height: 50px;
+            line-height: 1.5;
+            outline: none;
+        }
+        .prompt-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(196, 127, 59, 0.08);
+        }
+        .param-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .chip {
+            padding: 6px 13px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            font-weight: 500;
+            user-select: none;
+        }
+        .chip:hover {
+            border-color: var(--accent-light);
+            background: var(--accent-glow);
+        }
+        .chip.selected {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(196, 127, 59, 0.3);
+        }
+        .chip-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-right: 2px;
+        }
+
+        .editor-section {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 400px;
+        }
+        .editor-toolbar {
+            display: flex;
+            gap: 4px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+            flex-wrap: wrap;
+        }
+        .editor-toolbar button {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .editor-toolbar button:hover {
+            background: var(--bg-card);
+            color: var(--accent);
+        }
+        .editor-textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 20px 22px;
+            font-family: var(--font-editor);
+            font-size: 1.05rem;
+            line-height: 1.85;
+            resize: none;
+            background: var(--bg-editor);
+            color: var(--text-primary);
+            outline: none;
+            overflow-y: auto;
+        }
+        .editor-textarea::placeholder {
+            color: #c4b9a8;
+            font-style: italic;
+        }
+
+        .ai-bubble {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #fefaf5;
+            border-radius: var(--radius-md);
+            margin: 4px 0;
+            border: 1px solid #f5e8d5;
+            animation: fadeInUp 0.4s ease-out;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #2c2416;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            animation: toastIn 0.4s ease-out, toastOut 0.3s ease-in 2.5s forwards;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes toastOut {
+            to {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 200;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 99;
+        }
+        .overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 860px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                transform: translateX(-100%);
+                height: 100vh;
+                z-index: 150;
+                transition: transform var(--transition);
+                box-shadow: var(--shadow-lg);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .mobile-menu-btn {
+                display: flex;
+            }
+            .content-area {
+                padding: 14px 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="ai-avatar-container" id="avatarContainer">
+                <div class="ai-avatar-circle" id="avatarCircle">
+                    <span class="ai-face" id="aiFace"></span>
+                </div>
+                <div class="ai-status-dot" id="statusDot"></div>
+            </div>
+            <div class="ai-name">墨灵</div>
+            <div class="ai-tagline">你的AI写作伙伴</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-nav-label">写作类型</span>
+            <button class="type-btn active" data-type="essay" onclick="selectType('essay', this)">
+                <span class="type-icon">📝</span> 论文写作 <span class="type-badge">学术</span>
+            </button>
+            <button class="type-btn" data-type="novel" onclick="selectType('novel', this)">
+                <span class="type-icon">📖</span> 小说创作 <span class="type-badge">创意</span>
+            </button>
+            <button class="type-btn" data-type="prose" onclick="selectType('prose', this)">
+                <span class="type-icon">🍃</span> 散文随笔 <span class="type-badge">文学</span>
+            </button>
+            <button class="type-btn" data-type="poetry" onclick="selectType('poetry', this)">
+                <span class="type-icon">🎐</span> 诗歌 <span class="type-badge">韵律</span>
+            </button>
+            <button class="type-btn" data-type="copywriting" onclick="selectType('copywriting', this)">
+                <span class="type-icon">💼</span> 商业文案 <span class="type-badge">实用</span>
+            </button>
+            <button class="type-btn" data-type="script" onclick="selectType('script', this)">
+                <span class="type-icon">🎭</span> 剧本台词 <span class="type-badge">戏剧</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="btn-outline" onclick="clearEditor()">🗑️ 清空编辑器</button>
+            <button class="btn-outline" onclick="exportContent()">📥 导出为文本</button>
+            <button class="btn-outline" onclick="showHistory()">📋 历史记录 (<span id="historyCount">0</span>)</button>
+        </div>
+    </aside>
+
+    <!-- 主区域 -->
+    <main class="main-area">
+        <div class="topbar">
+            <input type="text" class="doc-title-input" id="docTitle" placeholder="未命名文档">
+            <div class="topbar-actions">
+                <button class="btn btn-ghost btn-sm" onclick="toggleSidebar()" title="切换侧边栏">☰ 菜单</button>
+                <span style="font-size:0.75rem;color:var(--text-muted);" id="wordCountDisplay">字数: 0</span>
+                <button class="btn btn-primary" id="btnGenerate" onclick="startGenerate()">✨ 开始写作</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="prompt-section">
+                <div class="prompt-row">
+                    <div class="prompt-input-wrap">
+                        <textarea class="prompt-input" id="promptInput" placeholder="告诉墨灵你想写什么...&#10;例如：写一篇关于人工智能伦理的学术论文大纲" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="param-chips">
+                    <span class="chip-label">风格:</span>
+                    <span class="chip" data-param="style" data-val="academic" onclick="toggleChip(this)">学术严谨</span>
+                    <span class="chip" data-param="style" data-val="literary" onclick="toggleChip(this)">文学优美</span>
+                    <span class="chip selected" data-param="style" data-val="natural" onclick="toggleChip(this)">自然流畅</span>
+                    <span class="chip" data-param="style" data-val="humorous" onclick="toggleChip(this)">幽默风趣</span>
+                    <span style="margin:0 4px;">·</span>
+                    <span class="chip-label">字数:</span>
+                    <span class="chip" data-param="length" data-val="short" onclick="toggleChip(this)">短篇 ~500字</span>
+                    <span class="chip selected" data-param="length" data-val="medium" onclick="toggleChip(this)">中篇 ~1500字</span>
+                    <span class="chip" data-param="length" data-val="long" onclick="toggleChip(this)">长篇 ~3000字</span>
+                    <span style="margin:0 4px;">·</span>
+                    <span class="chip-label">创意:</span>
+                    <span class="chip" data-param="creativity" data-val="conservative" onclick="toggleChip(this)">保守</span>
+                    <span class="chip selected" data-param="creativity" data-val="balanced" onclick="toggleChip(this)">平衡</span>
+                    <span class="chip" data-param="creativity" data-val="creative" onclick="toggleChip(this)">大胆</span>
+                </div>
+            </div>
+
+            <div id="aiBubbleArea"></div>
+
+            <div class="editor-section">
+                <div class="editor-toolbar">
+                    <button onclick="insertMarkdown('**', '**')" title="加粗"><b>B</b></button>
+                    <button onclick="insertMarkdown('*', '*')" title="斜体"><i>I</i></button>
+                    <button onclick="insertMarkdown('\n## ', '')" title="标题">H</button>
+                    <span style="width:1px; background:var(--border); margin:4px 6px;"></span>
+                    <button onclick="document.getElementById('editorTextarea').focus(); document.execCommand('undo')">↩</button>
+                    <button onclick="document.getElementById('editorTextarea').focus(); document.execCommand('redo')">↪</button>
+                    <span style="margin-left:auto; font-size:0.7rem; color:var(--text-muted);">支持 Markdown</span>
+                </div>
+                <textarea class="editor-textarea" id="editorTextarea" placeholder="墨灵生成的内容将在这里呈现...&#10;&#10;你也可以直接自由写作，或修改AI生成的内容。" oninput="updateWordCount()"></textarea>
+            </div>
+        </div>
+    </main>
+
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">📋</button>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        (function() {
+            // 状态管理
+            const state = {
+                currentType: 'essay',
+                isGenerating: false,
+                generationAborted: false,
+                selectedParams: { style: 'natural', length: 'medium', creativity: 'balanced' },
+                history: [],
+                currentStreamText: ''
+            };
+
+            // DOM 引用
+            const $ = (sel) => document.querySelector(sel);
+            const $$ = (sel) => document.querySelectorAll(sel);
+            const avatarCircle = $('#avatarCircle');
+            const aiFace = $('#aiFace');
+            const statusDot = $('#statusDot');
+            const avatarContainer = $('#avatarContainer');
+            const editorTextarea = $('#editorTextarea');
+            const promptInput = $('#promptInput');
+            const btnGenerate = $('#btnGenerate');
+            const wordCountDisplay = $('#wordCountDisplay');
+            const docTitle = $('#docTitle');
+            const aiBubbleArea = $('#aiBubbleArea');
+            const historyCount = $('#historyCount');
+            const sidebar = $('#sidebar');
+            const overlay = $('#overlay');
+            const mobileMenuBtn = $('#mobileMenuBtn');
+            const toastContainer = $('#toastContainer');
+
+            // 工具函数
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            const showToast = (msg) => {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = msg;
+                toastContainer.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            };
+
+            const setAIState = (stateName) => {
+                avatarCircle.classList.remove('thinking', 'writing');
+                statusDot.classList.remove('busy');
+                if (stateName === 'thinking') {
+                    avatarCircle.classList.add('thinking');
+                    statusDot.classList.add('busy');
+                } else if (stateName === 'writing') {
+                    avatarCircle.classList.add('writing');
+                    statusDot.classList.add('busy');
+                } else if (stateName === 'done') {
+                    setTimeout(() => {
+                        if (!state.isGenerating) {
+                            avatarCircle.classList.remove('thinking', 'writing');
+                            statusDot.classList.remove('busy');
+                        }
+                    }, 3500);
+                } else {
+                    avatarCircle.classList.remove('thinking', 'writing');
+                    statusDot.classList.remove('busy');
+                }
+            };
+
+            const updateWordCount = () => {
+                const text = editorTextarea.value.trim();
+                const count = text.length > 0 ? text.replace(/\s/g, '').length : 0;
+                wordCountDisplay.textContent = `字数: ${count}`;
+                if (!docTitle.value && text.length > 0) {
+                    const firstLine = text.split('\n')[0].replace(/^#+\s*/, '').trim();
+                    if (firstLine && firstLine.length < 50) docTitle.value = firstLine;
+                }
+            };
+
+            const updateHistoryCount = () => {
+                historyCount.textContent = state.history.length;
+            };
+
+            const addAIBubble = (text) => {
+                const bubble = document.createElement('div');
+                bubble.className = 'ai-bubble';
+                bubble.innerHTML = `<div style="width:28px;height:28px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:0.9rem;">🖋️</div><span>${text}</span>`;
+                aiBubbleArea.appendChild(bubble);
+                bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                while (aiBubbleArea.children.length > 5) aiBubbleArea.removeChild(aiBubbleArea.firstChild);
+            };
+
+            // 侧边栏控制
+            window.toggleSidebar = () => {
+                if (window.innerWidth <= 860) {
+                    sidebar.classList.toggle('open');
+                    overlay.classList.toggle('active');
+                    mobileMenuBtn.style.display = sidebar.classList.contains('open') ? 'none' : 'flex';
+                } else {
+                    const isVisible = sidebar.style.display !== 'none';
+                    sidebar.style.display = isVisible ? 'none' : 'flex';
+                    sidebar.style.minWidth = isVisible ? '0' : '280px';
+                    showToast(isVisible ? '侧边栏已隐藏' : '侧边栏已显示');
+                }
+            };
+
+            window.closeSidebar = () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                if (window.innerWidth <= 860) mobileMenuBtn.style.display = 'flex';
+            };
+
+            // 类型选择
+            window.selectType = (type, btn) => {
+                state.currentType = type;
+                $$('.type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const defaults = {
+                    essay: { style: 'academic', length: 'long', creativity: 'conservative' },
+                    novel: { style: 'literary', length: 'medium', creativity: 'creative' },
+                    prose: { style: 'literary', length: 'medium', creativity: 'balanced' },
+                    poetry: { style: 'literary', length: 'short', creativity: 'creative' },
+                    copywriting: { style: 'natural', length: 'short', creativity: 'balanced' },
+                    script: { style: 'natural', length: 'medium', creativity: 'creative' }
+                };
+                state.selectedParams = { ...defaults[type] || { style: 'natural', length: 'medium', creativity: 'balanced' } };
+                updateChipUI();
+                const placeholders = {
+                    essay: '例如：写一篇关于"数字时代隐私保护"的学术论文大纲',
+                    novel: '例如：创作一个架空奇幻世界的开篇，主角是一位失去记忆的旅人',
+                    prose: '例如：写一篇关于秋日午后在老街漫步的散文',
+                    poetry: '例如：写一首关于"月光与海"的现代诗',
+                    copywriting: '例如：为一款智能咖啡机撰写产品文案',
+                    script: '例如：写一段两个人在雨夜咖啡馆重逢的对话'
+                };
+                promptInput.placeholder = placeholders[type] || '告诉墨灵你想写什么...';
+                showToast(`已切换至「${btn.textContent.trim().split('\n')[0]}」模式`);
+                if (window.innerWidth <= 860) closeSidebar();
+            };
+
+            const updateChipUI = () => {
+                $$('.chip[data-param]').forEach(chip => {
+                    const param = chip.dataset.param;
+                    const val = chip.dataset.val;
+                    chip.classList.toggle('selected', state.selectedParams[param] === val);
+                });
+            };
+
+            window.toggleChip = (chip) => {
+                const param = chip.dataset.param;
+                const val = chip.dataset.val;
+                $$(`.chip[data-param="${param}"]`).forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                state.selectedParams[param] = val;
+                showToast(`已选择: ${chip.textContent.trim()}`);
+            };
+
+            // 编辑器操作
+            window.insertMarkdown = (before, after) => {
+                const textarea = editorTextarea;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const selected = textarea.value.substring(start, end);
+                textarea.setRangeText(before + selected + after, start, end, 'select');
+                textarea.focus();
+                updateWordCount();
+                showToast('已插入格式标记');
+            };
+
+            window.clearEditor = () => {
+                if (editorTextarea.value.trim() && !confirm('确定清空所有内容吗？')) return;
+                editorTextarea.value = '';
+                docTitle.value = '';
+                updateWordCount();
+                aiBubbleArea.innerHTML = '';
+                showToast('编辑器已清空');
+            };
+
+            window.exportContent = () => {
+                const content = editorTextarea.value.trim();
+                if (!content) return showToast('编辑器为空，无法导出');
+                const title = docTitle.value || '未命名文档';
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${title}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('✅ 已导出为文本文件');
+            };
+
+            // 历史记录
+            const saveToHistory = () => {
+                const content = editorTextarea.value.trim();
+                if (!content) return;
+                const entry = {
+                    id: Date.now(),
+                    title: docTitle.value || '未命名',
+                    type: state.currentType,
+                    content: content,
+                    date: new Date().toLocaleString('zh-CN'),
+                    preview: content.substring(0, 150) + '...'
+                };
+                if (state.history.length > 0 && state.history[0].content === content) return;
+                state.history.unshift(entry);
+                if (state.history.length > 20) state.history = state.history.slice(0, 20);
+                localStorage.setItem('moli_writing_history', JSON.stringify(state.history));
+                updateHistoryCount();
+            };
+
+            const loadHistory = () => {
+                try {
+                    const data = localStorage.getItem('moli_writing_history');
+                    if (data) state.history = JSON.parse(data);
+                } catch (e) { state.history = []; }
+            };
+
+            window.showHistory = () => {
+                if (state.history.length === 0) return showToast('暂无历史记录');
+                const list = state.history.slice(0, 8).map((h, i) =>
+                    `${i + 1}. [${h.type}] ${h.title} — ${h.date}\n   ${h.preview}`
+                ).join('\n\n');
+                const sel = prompt(`📋 历史记录（共${state.history.length}条）\n输入序号加载，或0取消：\n\n${list}`);
+                if (sel && !isNaN(sel)) {
+                    const idx = parseInt(sel) - 1;
+                    if (idx >= 0 && idx < state.history.length) {
+                        const entry = state.history[idx];
+                        editorTextarea.value = entry.content;
+                        docTitle.value = entry.title;
+                        state.currentType = entry.type;
+                        updateWordCount();
+                        updateChipUI();
+                        showToast(`已加载：${entry.title}`);
+                        editorTextarea.scrollTop = 0;
+                        editorTextarea.focus();
+                    }
+                }
+            };
+
+            // 内容生成
+            const generateMockContent = (prompt) => {
+                const topic = prompt.replace(/[写一篇|创作|请|帮我|帮忙|关于|的|一个|一段|一首]/g, '').trim().substring(0, 30) || '未命名';
+                const t = state.currentType;
+                if (t === 'essay') return `# ${topic}\n\n## 摘要\n本文围绕"${topic}"展开深入分析……\n\n## 一、引言\n在当前背景下，${topic}已成为重要课题……`;
+                if (t === 'novel') return `# ${topic}\n\n深秋的风裹挟着梧桐叶的气息，从半掩的窗扉间涌入。林知远坐在书桌前，指尖摩挲着那封泛黄的信笺……`;
+                if (t === 'prose') return `# ${topic}\n\n清晨的雾气还未散尽，我独自沿着青石板路慢慢走着。这座小镇总是不紧不慢的，像一位上了年纪的说书人……`;
+                if (t === 'poetry') return `# ${topic}\n\n月光是海面碎裂的银币，\n在潮汐的呼吸间摇晃。\n我站在时间的岸边，\n看记忆的泡沫一一破灭……`;
+                if (t === 'copywriting') return `# ${topic} 文案\n\n## 核心卖点\n- 极致体验\n- 匠心设计\n\n## Slogan\n「${topic}，让生活更有温度。」`;
+                if (t === 'script') return `# ${topic} 场景\n\n**咖啡馆·傍晚**\n沈默：（低头搅拌咖啡）我以为你不会来了。\n苏晚：（放下伞）雨太大了，或许是天意。`;
+                return `# ${topic}\n\n这是关于${topic}的创作……`;
+            };
+
+            window.startGenerate = async () => {
+                if (state.isGenerating) return;
+                const prompt = promptInput.value.trim();
+                if (!prompt) {
+                    showToast('请先输入写作主题或要求');
+                    promptInput.focus();
+                    return;
+                }
+                state.isGenerating = true;
+                state.generationAborted = false;
+                btnGenerate.disabled = true;
+                btnGenerate.innerHTML = '⏳ 写作中...';
+                setAIState('thinking');
+                aiBubbleArea.innerHTML = '';
+                addAIBubble('好的，让我构思一下... 📝');
+                await sleep(1500);
+                if (state.generationAborted) {
+                    resetGeneration();
+                    return;
+                }
+                setAIState('writing');
+                addAIBubble('开始写作了，请欣赏~ ✨');
+                const content = generateMockContent(prompt);
+                try {
+                    for (let i = 0; i < content.length; i++) {
+                        if (state.generationAborted) break;
+                        editorTextarea.value += content[i];
+                        editorTextarea.scrollTop = editorTextarea.scrollHeight;
+                        updateWordCount();
+                        let delay = 18 + Math.random() * 15;
+                        if ('。！？\n'.includes(content[i])) delay = 60;
+                        else if ('，；：'.includes(content[i])) delay = 35;
+                        await sleep(delay);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+                if (!state.generationAborted) {
+                    setAIState('done');
+                    addAIBubble('写好了！你可以随时让我修改或继续。');
+                    showToast('✅ 写作完成！');
+                    saveToHistory();
+                }
+                resetGeneration();
+            };
+
+            const resetGeneration = () => {
+                state.isGenerating = false;
+                state.generationAborted = false;
+                btnGenerate.disabled = false;
+                btnGenerate.innerHTML = '✨ 开始写作';
+                if (!state.isGenerating) setAIState('idle');
+            };
+
+            // 头像点击
+            avatarContainer.addEventListener('click', () => {
+                if (state.isGenerating) {
+                    state.generationAborted = true;
+                    showToast('已中止生成');
+                    addAIBubble('好的，已暂停。随时可以让我继续。');
+                    return;
+                }
+                const msgs = ['嗨！今天想写点什么？', '有灵感了吗？告诉我主题吧~', '我喜欢在深夜写作，你呢？', '遇到瓶颈别担心，我们一起 brainstorm！'];
+                addAIBubble(msgs[Math.floor(Math.random() * msgs.length)]);
+                avatarCircle.style.transform = 'scale(1.08)';
+                setTimeout(() => avatarCircle.style.transform = '', 200);
+            });
+
+            // 快捷键
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    startGenerate();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveToHistory();
+                    showToast('💾 已保存到历史记录');
+                }
+                if (e.key === 'Escape' && state.isGenerating) {
+                    e.preventDefault();
+                    state.generationAborted = true;
+                    resetGeneration();
+                    showToast('已中止生成');
+                }
+            });
+
+            // 初始化
+            loadHistory();
+            updateHistoryCount();
+            updateWordCount();
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 860) {
+                    closeSidebar();
+                    sidebar.style.display = 'flex';
+                    sidebar.style.minWidth = '280px';
+                } else {
+                    sidebar.style.display = 'flex';
+                    sidebar.style.minWidth = '280px';
+                    if (!sidebar.classList.contains('open')) mobileMenuBtn.style.display = 'flex';
+                }
+            });
+            // 确保桌面端侧边栏可见
+            if (window.innerWidth > 860) {
+                sidebar.style.display = 'flex';
+                sidebar.style.minWidth = '280px';
+            }
+            console.log('🖋️ 墨灵AI写作伙伴已就绪 (演示版)');
+        })();
+    </script>
+</body>
+</html>
