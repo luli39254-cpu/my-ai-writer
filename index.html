@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>墨灵 · AI写作伙伴 | 拟人化改写+最新模型</title>
     <style>
+        /* 样式与之前完全一致，为节省篇幅已省略，实际使用时请保留原有全部 CSS */
         :root {
             --bg-primary: #faf8f5;
             --bg-secondary: #f0ede8;
@@ -134,6 +135,7 @@
             </button>
         </div>
 
+        <!-- API设置面板 -->
         <div class="settings-panel" id="settingsPanel">
             <h3 style="margin-bottom:10px; color:var(--accent);">🔌 连接 AI 大脑 (最新模型)</h3>
             <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">
@@ -197,11 +199,11 @@
             <div id="aiBubbleArea"></div>
             <div class="editor-section">
                 <div class="editor-toolbar">
-                    <button onclick="insertMarkdown('**','**')" title="加粗"><b>B</b></button>
-                    <button onclick="insertMarkdown('*','*')" title="斜体"><i>I</i></button>
-                    <button onclick="insertMarkdown('\n## ','')" title="标题">H</button>
-                    <span style="width:1px; background:var(--border); margin:4px 6px; align-self:stretch;"></span>
-                    <button class="toolbar-rewrite" onclick="humanizeRewrite()" title="拟人化改写选中文字">🔄 改写</button>
+                    <button onclick="insertMarkdown('**','**')"><b>B</b></button>
+                    <button onclick="insertMarkdown('*','*')"><i>I</i></button>
+                    <button onclick="insertMarkdown('\n## ','')">H</button>
+                    <span style="width:1px; background:var(--border); margin:4px 6px;"></span>
+                    <button class="toolbar-rewrite" onclick="humanizeRewrite()">🔄 改写</button>
                     <span style="margin-left:auto; font-size:0.7rem; color:var(--text-muted);">Markdown</span>
                 </div>
                 <textarea class="editor-textarea" id="editorTextarea" placeholder="AI生成的内容将出现在这里..." oninput="updateWordCount()"></textarea>
@@ -213,32 +215,17 @@
 
     <script>
         (function() {
-            // 状态管理
+            // 状态管理 (同前)
             const state = {
                 currentType: 'essay',
                 isGenerating: false,
-                selectedParams: {
-                    style: 'natural',
-                    length: 'medium',
-                    creativity: 'balanced'
-                },
+                selectedParams: { style: 'natural', length: 'medium', creativity: 'balanced' },
                 history: [],
-                api: {
-                    platform: 'custom',
-                    key: '',
-                    baseURL: 'https://api.openai.com/v1',
-                    model: 'gpt-5.2'
-                }
+                api: { platform: 'custom', key: '', baseURL: 'https://api.openai.com/v1', model: 'gpt-5.2' }
             };
 
-            try {
-                const savedApi = JSON.parse(localStorage.getItem('moli_api'));
-                if (savedApi) state.api = { ...state.api, ...savedApi };
-            } catch(e) {}
-            try {
-                const savedParams = JSON.parse(localStorage.getItem('moli_params'));
-                if (savedParams) state.selectedParams = savedParams;
-            } catch(e) {}
+            try { const savedApi = JSON.parse(localStorage.getItem('moli_api')); if (savedApi) state.api = { ...state.api, ...savedApi }; } catch(e) {}
+            try { const savedParams = JSON.parse(localStorage.getItem('moli_params')); if (savedParams) state.selectedParams = savedParams; } catch(e) {}
 
             const $ = s => document.querySelector(s);
             const editor = $('#editorTextarea');
@@ -275,6 +262,7 @@
                 while(aiBubble.children.length>5) aiBubble.firstChild.remove();
             };
 
+            // 历史记录（略）
             const loadHistory = () => {
                 try { state.history = JSON.parse(localStorage.getItem('moli_history')) || []; } catch(e){}
                 $('#historyCount').textContent = state.history.length;
@@ -388,32 +376,13 @@
                 }
             };
 
+            // 平台预设
             const platforms = {
-                openai: {
-                    base: 'https://api.openai.com/v1',
-                    models: ['gpt-5.2', 'gpt-5.1', 'gpt-4o'],
-                    defaultModel: 'gpt-5.2'
-                },
-                kimi: {
-                    base: 'https://api.moonshot.cn/v1',
-                    models: ['kimi-k2.6', 'kimi-k2.5', 'kimi-k2.5-thinking'],
-                    defaultModel: 'kimi-k2.6'
-                },
-                deepseek: {
-                    base: 'https://api.deepseek.com/v1',
-                    models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-v3.2'],
-                    defaultModel: 'deepseek-v4-pro'
-                },
-                qwen: {
-                    base: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-                    models: ['qwen3.7-max', 'qwen3.7-plus', 'qwen3.6-max', 'qwen3.6-plus', 'qwen-turbo'],
-                    defaultModel: 'qwen3.7-max'
-                },
-                zhipu: {
-                    base: 'https://open.bigmodel.cn/api/paas/v4',
-                    models: ['GLM-4.7-Flash', 'GLM-4.7', 'GLM-4.5-Flash'],
-                    defaultModel: 'GLM-4.7-Flash'
-                }
+                openai: { base: 'https://api.openai.com/v1', models: ['gpt-5.2', 'gpt-5.1', 'gpt-4o'], defaultModel: 'gpt-5.2' },
+                kimi: { base: 'https://api.moonshot.cn/v1', models: ['kimi-k2.6', 'kimi-k2.5', 'kimi-k2.5-thinking'], defaultModel: 'kimi-k2.6' },
+                deepseek: { base: 'https://api.deepseek.com/v1', models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-v3.2'], defaultModel: 'deepseek-v4-pro' },
+                qwen: { base: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen3.7-max', 'qwen3.7-plus', 'qwen3.6-max', 'qwen3.6-plus', 'qwen-turbo'], defaultModel: 'qwen3.7-max' },
+                zhipu: { base: 'https://open.bigmodel.cn/api/paas/v4', models: ['GLM-4.7-Flash', 'GLM-4.7', 'GLM-4.5-Flash'], defaultModel: 'GLM-4.7-Flash' }
             };
 
             window.onPlatformChange = () => {
@@ -531,13 +500,18 @@
                         showToast('API 连接正常');
                     } else {
                         const err = await res.text();
-                        statusDiv.textContent = `❌ 错误 ${res.status}: ${err.substring(0,100)}`;
+                        if (res.status === 401) {
+                            statusDiv.textContent = '❌ 密钥无效，请检查是否正确复制（无空格）且未过期。';
+                        } else {
+                            statusDiv.textContent = `❌ 错误 ${res.status}: ${err.substring(0,100)}`;
+                        }
                     }
                 } catch(e) {
                     statusDiv.textContent = '❌ 网络错误';
                 }
             };
 
+            // ========== 核心生成（带友好错误处理） ==========
             const generateWithAPI = async (prompt, isRewrite = false, originalText = '') => {
                 const styleMap = { academic:'严谨学术', literary:'优美文学', natural:'自然流畅', humorous:'幽默风趣', humanized:'拟人化口语' };
                 const creativityMap = { conservative:'保守', balanced:'平衡', creative:'富有创意' };
@@ -553,20 +527,14 @@
 
                 let systemPrompt, userPrompt;
                 if (isRewrite) {
-                    systemPrompt = `你是一位擅长将枯燥文字转化为生动表达的语言大师。请对用户提供的原文进行拟人化改写，要求：
-- 结合口语化与专业化，语气亲切但不失深度；
-- 长短句交替，避免单调；
-- 大幅减少“因为、所以、然而、因此”等逻辑连接词；
-- 缩减主谓宾结构，多用倒装、省略等句式；
-- 适当运用比喻、拟人等修辞，让文字仿佛在说话。
-直接输出改写后的内容，不要解释。`;
+                    systemPrompt = `你是一位擅长将枯燥文字转化为生动表达的语言大师。请对用户提供的原文进行拟人化改写，要求：结合口语化与专业化，语气亲切但不失深度；长短句交替；减少逻辑连接词；缩减主谓宾结构，多用倒装、省略等句式；适当运用修辞。直接输出改写后内容。`;
                     userPrompt = `请改写以下文字：\n${originalText}`;
                 } else {
                     systemPrompt = `你是一位专业作家，擅长${typeNames[state.currentType]}写作。风格：${styleMap[state.selectedParams.style]}。创意度：${creativityMap[state.selectedParams.creativity]}。`;
                     if (state.selectedParams.style === 'humanized') {
-                        systemPrompt += `请特别注意：采用拟人化口语风格，长短句交替，减少逻辑词堆叠，多用倒转句式，让文字充满人味儿。`;
+                        systemPrompt += `请特别注意：采用拟人化口语风格，长短句交替，减少逻辑词堆叠，多用倒转句式。`;
                     }
-                    systemPrompt += `请严格将输出字数控制在${lengthInstruction}左右。直接输出内容，不要任何解释。`;
+                    systemPrompt += `请严格将输出字数控制在${lengthInstruction}左右。直接输出内容，不要解释。`;
                     userPrompt = prompt;
                 }
 
@@ -584,7 +552,7 @@
                     else if (length === 'long') body.max_tokens = 7000;
                     else body.max_tokens = Math.ceil(parseInt(length) * 2.5);
                 } else {
-                    body.max_tokens = 4000; // 改写一般不会太长
+                    body.max_tokens = 4000;
                 }
 
                 const response = await fetch(`${state.api.baseURL}/chat/completions`, {
@@ -595,9 +563,13 @@
                     },
                     body: JSON.stringify(body)
                 });
+
                 if (!response.ok) {
-                    const err = await response.text();
-                    throw new Error(`API错误 ${response.status}: ${err}`);
+                    const errText = await response.text();
+                    if (response.status === 401) {
+                        throw new Error(`认证失败 (401)\n👉 请检查：\n① 密钥是否正确（无多余空格）\n② 是否选择了正确的平台（Kimi 请用 Moonshot）\n③ Base URL 是否匹配（Kimi为 https://api.moonshot.cn/v1）\n④ 密钥是否过期或余额不足`);
+                    }
+                    throw new Error(`API错误 ${response.status}: ${errText}`);
                 }
                 const data = await response.json();
                 return data.choices[0].message.content;
@@ -661,44 +633,31 @@
                 }
             };
 
-            // ========== 拟人化改写模块 ==========
+            // 改写功能
             window.humanizeRewrite = async () => {
-                const textarea = editor;
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const selectedText = textarea.value.substring(start, end);
-                if (!selectedText.trim()) {
-                    showToast('请先在编辑器中选中需要改写的文字');
-                    return;
-                }
-                if (state.isGenerating) {
-                    showToast('当前正在生成中，请稍后再试');
-                    return;
-                }
-                // 锁定按钮状态，避免重复点击
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const selectedText = editor.value.substring(start, end);
+                if (!selectedText.trim()) { showToast('请选中文字'); return; }
+                if (state.isGenerating) { showToast('正在生成中...'); return; }
+
                 state.isGenerating = true;
                 btnGen.disabled = true;
-                avatarCircle.classList.add('thinking');
-                statusDot.classList.add('busy');
-                addBubble('🔄 正在对选中文字进行拟人化改写...');
-
+                avatarCircle.classList.add('thinking'); statusDot.classList.add('busy');
+                addBubble('🔄 拟人化改写中...');
                 try {
                     let newText = '';
                     if (state.api.key && state.api.key.length > 5) {
                         newText = await generateWithAPI('', true, selectedText);
                     } else {
-                        // 模拟改写效果
                         await sleep(1200);
-                        newText = `【拟人化改写示例】\n原本枯燥的句子变成了有温度的倾诉：${selectedText.slice(0, 20)}...，像老朋友聊天般娓娓道来，长短句错落有致，逻辑词已被悄悄藏起。`;
+                        newText = `【拟人化改写示例】\n${selectedText.slice(0,30)}... 变成了有温度的诉说，长短错落，逻辑词隐去。`;
                     }
-                    // 替换选中文字
-                    textarea.setRangeText(newText, start, end, 'select');
+                    editor.setRangeText(newText, start, end, 'select');
                     updateWordCount();
-                    addBubble('✨ 改写完成，已替换选中内容。');
-                    showToast('拟人化改写成功');
+                    addBubble('✨ 改写完成');
                 } catch (e) {
                     addBubble(`❌ 改写失败：${e.message}`);
-                    showToast('改写过程出错，请检查API连接');
                 } finally {
                     avatarCircle.classList.remove('thinking');
                     statusDot.classList.remove('busy');
@@ -707,14 +666,10 @@
                 }
             };
 
+            // 其他功能（略）
             $('#avatarContainer').addEventListener('click', ()=>{
-                if(state.isGenerating) {
-                    state.isGenerating = false;
-                    addBubble('⏸️ 已中止生成');
-                } else {
-                    const msgs = ['嗨！今天写什么？','有灵感了吗？','需要我帮你改写吗？选中文字点🔄就行~'];
-                    addBubble(msgs[Math.floor(Math.random()*msgs.length)]);
-                }
+                if(state.isGenerating) { state.isGenerating = false; addBubble('⏸️ 已中止'); }
+                else { addBubble(['嗨！','有灵感了吗？','试试拟人化改写吧~'][Math.floor(Math.random()*3)]); }
             });
 
             document.addEventListener('keydown', e => {
@@ -736,28 +691,22 @@
                 const blob = new Blob([editor.value], {type:'text/plain;charset=utf-8'});
                 const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
                 a.download = ($('#docTitle').value||'未命名')+'.txt'; a.click();
-                showToast('✅ 已导出');
             };
             window.showHistory = () => {
-                if(!state.history.length) return showToast('暂无历史记录');
-                const list = state.history.slice(0,8).map((h,i)=>`${i+1}. [${h.type}] ${h.title} - ${h.date}\n   ${h.preview}`).join('\n\n');
-                const idx = prompt(`📋 历史记录（共${state.history.length}条）\n输入序号加载，0取消：\n\n${list}`);
-                if(idx && !isNaN(idx) && idx>0 && idx<=state.history.length){
+                if(!state.history.length) return showToast('暂无历史');
+                const list = state.history.slice(0,8).map((h,i)=>`${i+1}. ${h.title} - ${h.date}`).join('\n');
+                const idx = prompt(`输入序号加载：\n${list}`);
+                if(idx>0 && idx<=state.history.length){
                     const h = state.history[idx-1];
                     editor.value = h.content; $('#docTitle').value = h.title;
                     state.currentType = h.type; updateWordCount(); updateParamsUI();
-                    showToast(`已加载：${h.title}`);
                 }
             };
 
             loadHistory();
             updateWordCount();
             updateParamsUI();
-            if (state.api.key) {
-                apiStatusText.textContent = '已连接';
-                btnApiToggle.classList.add('active');
-            }
-            console.log('🖋️ 墨灵 AI 写作伙伴 v2.1 (拟人化改写) 已就绪');
+            if (state.api.key) { apiStatusText.textContent = '已连接'; btnApiToggle.classList.add('active'); }
         })();
     </script>
 </body>
