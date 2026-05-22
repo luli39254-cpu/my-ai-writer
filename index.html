@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>墨灵 · AI写作伙伴 | 拟人化改写+模型保护</title>
+    <title>墨灵 · AI写作伙伴 | 拟人化改写+温度修复</title>
     <style>
+        /* 保留原有所有样式，无变化 */
         :root {
             --bg-primary: #faf8f5;
             --bg-secondary: #f0ede8;
@@ -134,11 +135,10 @@
             </button>
         </div>
 
-        <!-- API设置面板 -->
         <div class="settings-panel" id="settingsPanel">
             <h3 style="margin-bottom:10px; color:var(--accent);">🔌 连接 AI 大脑</h3>
             <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">
-                <b>直接选择平台，模型将自动正确填充。请勿手动输入错误名称。</b>
+                <b>选择平台自动填充最新模型，温度等参数自动适配。</b>
             </p>
             <label>🌐 快捷平台</label>
             <select id="platformSelect" onchange="onPlatformChange()">
@@ -386,7 +386,6 @@
                 const platform = $('#platformSelect').value;
                 state.api.platform = platform;
                 if (platform === 'custom') {
-                    // 保留当前填写内容，但恢复下拉框为通用模型
                     return;
                 }
                 const p = platforms[platform];
@@ -419,11 +418,9 @@
             };
 
             const initSettingsPanel = () => {
-                // 根据 state.api 恢复界面
                 if (state.api.platform && state.api.platform !== 'custom') {
                     $('#platformSelect').value = state.api.platform;
                     onPlatformChange();
-                    // 恢复模型选择
                     if (state.api.model) {
                         if ($('#modelSelect').querySelector(`option[value="${state.api.model}"]`)) {
                             $('#modelSelect').value = state.api.model;
@@ -447,7 +444,7 @@
                     }
                 }
                 if (state.api.key) {
-                    $('#apiKeyInput').value = '••••••'; // 占位，不显示原始密钥
+                    $('#apiKeyInput').value = '••••••';
                 } else {
                     $('#apiKeyInput').value = '';
                 }
@@ -525,7 +522,7 @@
                 }
             };
 
-            // 生成函数（错误信息增强）
+            // ========= 修复温度参数的核心部分 =========
             const generateWithAPI = async (prompt, isRewrite = false, originalText = '') => {
                 const styleMap = { academic:'严谨学术', literary:'优美文学', natural:'自然流畅', humorous:'幽默风趣', humanized:'拟人化口语' };
                 const creativityMap = { conservative:'保守', balanced:'平衡', creative:'富有创意' };
@@ -552,14 +549,24 @@
                     userPrompt = prompt;
                 }
 
+                // 动态设定 temperature：Kimi 平台强制为 1
+                let temperature;
+                if (state.api.platform === 'kimi' || state.api.model.startsWith('kimi-') || state.api.model.startsWith('moonshot')) {
+                    temperature = 1;  // Kimi 只接受 temperature=1
+                } else {
+                    temperature = state.selectedParams.creativity==='creative'?0.9: (state.selectedParams.creativity==='conservative'?0.3:0.7);
+                }
+
                 const body = {
                     model: state.api.model,
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: userPrompt }
                     ],
-                    temperature: state.selectedParams.creativity==='creative'?0.9: (state.selectedParams.creativity==='conservative'?0.3:0.7),
+                    temperature: temperature,
                 };
+
+                // max_tokens 设置
                 if (!isRewrite) {
                     if (length === 'short') body.max_tokens = 1200;
                     else if (length === 'medium') body.max_tokens = 3500;
@@ -584,6 +591,8 @@
                         throw new Error(`认证失败 (401)\n👉 请检查：\n① 密钥是否正确（无多余空格）\n② 是否选择了正确的平台\n③ 密钥是否过期或余额不足`);
                     } else if (response.status === 404) {
                         throw new Error(`资源未找到 (404)\n👉 请检查模型名称是否准确。当前使用模型：${state.api.model}\n正确示例：Kimi 应为 kimi-k2.6，DeepSeek 为 deepseek-chat 等。\n请打开设置面板，选择对应平台，模型会自动填充。`);
+                    } else if (response.status === 400) {
+                        throw new Error(`请求参数错误 (400)\n👉 可能原因：模型不支持自定义 temperature，已自动设为1。详细错误：${errText}`);
                     }
                     throw new Error(`API错误 ${response.status}: ${errText}`);
                 }
