@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>墨灵 · AI写作伙伴 | 支持真实API</title>
+    <title>墨灵 · AI写作伙伴 | 平台切换+自定义字数</title>
     <style>
-        /* 保留原有所有样式，略作补充 */
         :root {
             --bg-primary: #faf8f5;
             --bg-secondary: #f0ede8;
@@ -23,9 +22,8 @@
             --shadow-md: 0 4px 16px rgba(44,36,22,0.08);
             --shadow-lg: 0 12px 40px rgba(44,36,22,0.12);
             --radius-sm: 10px; --radius-md: 16px; --radius-lg: 24px;
-            --font-editor: 'Georgia', 'Noto Serif SC', 'STSong', serif;
+            --font-editor: 'Georgia', 'Noto Serif SC', serif;
             --font-ui: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:var(--font-ui); background:var(--bg-primary); color:var(--text-primary); min-height:100vh; display:flex; }
@@ -35,37 +33,43 @@
         .ai-avatar-circle { width:90px; height:90px; border-radius:50%; background:linear-gradient(145deg,#fdf3e4,#e8c9a0); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 24px rgba(196,127,59,0.25); transition:all 0.4s; }
         .ai-avatar-circle.thinking { animation:avatarPulse 1.2s infinite; }
         .ai-avatar-circle.writing { animation:avatarGlow 0.8s infinite; }
-        @keyframes avatarPulse { 0%,100%{box-shadow:0 6px 24px rgba(196,127,59,0.25)} 50%{box-shadow:0 8px 36px rgba(196,127,59,0.45); transform:scale(1.03)} }
-        @keyframes avatarGlow { 0%,100%{box-shadow:0 6px 32px rgba(196,127,59,0.45)} 50%{box-shadow:0 8px 44px rgba(196,127,59,0.7)} }
-        .ai-face { font-size:38px; line-height:1; }
+        @keyframes avatarPulse { 50%{box-shadow:0 8px 36px rgba(196,127,59,0.45); transform:scale(1.03)} }
+        @keyframes avatarGlow { 50%{box-shadow:0 8px 44px rgba(196,127,59,0.7)} }
+        .ai-face { font-size:38px; }
         .ai-face::after { content:'😊'; }
         .ai-avatar-circle.thinking .ai-face::after { content:'🤔'; animation:faceTilt 1.5s infinite; }
         .ai-avatar-circle.writing .ai-face::after { content:'✍️'; animation:faceBounce 0.6s infinite; }
-        @keyframes faceTilt { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-8deg)} 75%{transform:rotate(8deg)} }
-        @keyframes faceBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes faceTilt { 25%{transform:rotate(-8deg)} 75%{transform:rotate(8deg)} }
+        @keyframes faceBounce { 50%{transform:translateY(-6px)} }
         .ai-status-dot { position:absolute; bottom:4px; right:4px; width:16px; height:16px; border-radius:50%; background:#8bc34a; border:3px solid #fff; }
         .ai-status-dot.busy { background:#ff9800; animation:dotBlink 0.7s infinite; }
-        @keyframes dotBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes dotBlink { 50%{opacity:0.3} }
         .sidebar-nav { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:4px; }
-        .type-btn { display:flex; align-items:center; gap:10px; padding:12px 14px; border:none; background:transparent; border-radius:var(--radius-sm); cursor:pointer; font-size:0.9rem; color:var(--text-secondary); transition:all var(--transition); text-align:left; font-weight:500; }
+        .type-btn { display:flex; align-items:center; gap:10px; padding:12px 14px; border:none; background:transparent; border-radius:var(--radius-sm); cursor:pointer; font-size:0.9rem; color:var(--text-secondary); text-align:left; font-weight:500; }
         .type-btn:hover { background:var(--bg-secondary); }
         .type-btn.active { background:var(--accent-glow); color:var(--accent); font-weight:700; box-shadow:inset 0 0 0 2px var(--accent-light); }
         .sidebar-footer { padding:12px 16px; border-top:1px solid var(--border-light); display:flex; flex-direction:column; gap:8px; }
-        .btn-outline { padding:10px 14px; border:1.5px solid var(--border); background:transparent; border-radius:var(--radius-sm); cursor:pointer; font-size:0.82rem; color:var(--text-secondary); transition:all var(--transition); display:flex; align-items:center; gap:8px; justify-content:center; }
+        .btn-outline { padding:10px 14px; border:1.5px solid var(--border); background:transparent; border-radius:var(--radius-sm); cursor:pointer; font-size:0.82rem; color:var(--text-secondary); display:flex; align-items:center; gap:8px; justify-content:center; }
         .btn-outline:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
         .main-area { flex:1; display:flex; flex-direction:column; min-height:100vh; }
-        .topbar { padding:16px 24px; display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--border-light); background:var(--bg-card); position:sticky; top:0; z-index:50; flex-wrap:wrap; }
+        .topbar { padding:16px 24px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border-light); background:var(--bg-card); position:sticky; top:0; z-index:50; flex-wrap:wrap; }
         .doc-title-input { flex:1; border:none; font-size:1.3rem; font-weight:700; background:transparent; outline:none; }
-        .btn { padding:9px 18px; border-radius:24px; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; transition:all var(--transition); display:flex; align-items:center; gap:6px; }
+        .btn { padding:9px 18px; border-radius:24px; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:6px; }
         .btn-primary { background:var(--accent); color:#fff; box-shadow:0 4px 14px rgba(196,127,59,0.35); }
         .btn-primary:hover { background:#b57330; }
         .btn-primary:disabled { background:#d4b896; cursor:not-allowed; }
+        .btn-api { background:#e8f0fe; color:#1a73e8; border:2px solid #1a73e8; font-weight:700; }
+        .btn-api:hover { background:#d2e3fc; }
+        .btn-api.active { background:#1a73e8; color:#fff; }
         .content-area { flex:1; padding:20px 28px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
         .prompt-section { background:var(--bg-card); border-radius:var(--radius-lg); padding:18px 20px; box-shadow:var(--shadow-md); border:1px solid var(--border-light); }
         .prompt-input { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-size:0.9rem; resize:none; background:var(--bg-editor); outline:none; }
         .param-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; align-items:center; }
-        .chip { padding:6px 13px; border-radius:20px; font-size:0.75rem; cursor:pointer; border:1.5px solid var(--border); background:var(--bg-card); color:var(--text-secondary); transition:all var(--transition); }
+        .chip { padding:6px 13px; border-radius:20px; font-size:0.75rem; cursor:pointer; border:1.5px solid var(--border); background:var(--bg-card); color:var(--text-secondary); white-space:nowrap; }
         .chip.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
+        .chip.custom-length { display:flex; align-items:center; gap:4px; }
+        .chip.custom-length input { border:none; background:transparent; outline:none; font-size:0.75rem; width:60px; color:inherit; font-weight:600; }
+        .chip.custom-length input::placeholder { color:rgba(255,255,255,0.7); }
         .editor-section { flex:1; background:var(--bg-card); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--border-light); display:flex; flex-direction:column; overflow:hidden; min-height:400px; }
         .editor-toolbar { display:flex; gap:4px; padding:10px 14px; border-bottom:1px solid var(--border-light); background:var(--bg-secondary); }
         .editor-toolbar button { width:32px; height:32px; border-radius:6px; border:none; background:transparent; cursor:pointer; font-size:0.85rem; color:var(--text-secondary); }
@@ -77,24 +81,24 @@
         @keyframes toastIn { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
         @keyframes toastOut { to{opacity:0;transform:translateX(40px)} }
         /* 设置面板 */
-        .settings-toggle { position:absolute; top:16px; right:16px; background:var(--bg-secondary); border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; z-index:51; }
-        .settings-panel { display:none; position:absolute; top:60px; right:24px; background:var(--bg-card); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); padding:16px; width:320px; z-index:52; border:1px solid var(--border); }
+        .settings-panel { display:none; position:fixed; top:70px; right:24px; background:var(--bg-card); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); padding:20px; width:380px; max-width:90vw; z-index:200; border:1px solid var(--border); max-height:80vh; overflow-y:auto; }
         .settings-panel.active { display:block; }
         .settings-panel label { font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-top:8px; }
         .settings-panel input, .settings-panel select { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; margin-top:4px; font-size:0.8rem; }
         .settings-panel small { font-size:0.65rem; color:var(--text-muted); display:block; margin-top:2px; }
+        .overlay-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:199; }
+        .overlay-bg.active { display:block; }
         @media (max-width:860px) {
             .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); z-index:150; }
             .sidebar.open { transform:translateX(0); }
-            .content-area { padding:14px 12px; }
-            .settings-panel { right:10px; width:280px; }
+            .settings-panel { right:10px; width:90%; }
         }
     </style>
 </head>
 <body>
-    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+    <div class="overlay-bg" id="overlayBg" onclick="closeSettings()"></div>
 
-    <!-- 侧边栏 -->
+    <!-- 侧边栏 (保持原样) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="ai-avatar-container" id="avatarContainer">
@@ -102,7 +106,7 @@
                 <div class="ai-status-dot" id="statusDot"></div>
             </div>
             <div class="ai-name">墨灵</div>
-            <div class="ai-tagline">AI写作伙伴 · API增强版</div>
+            <div class="ai-tagline">AI写作伙伴 · 增强版</div>
         </div>
         <nav class="sidebar-nav">
             <span class="sidebar-nav-label">写作类型</span>
@@ -124,52 +128,68 @@
     <main class="main-area">
         <div class="topbar">
             <input type="text" class="doc-title-input" id="docTitle" placeholder="未命名文档">
-            <div class="topbar-actions">
-                <span id="wordCountDisplay">字数:0</span>
-                <button class="btn btn-primary" id="btnGenerate" onclick="startGenerate()">✨ 开始写作</button>
-                <button class="settings-toggle" onclick="toggleSettings()" title="API设置">⚙️</button>
-            </div>
+            <span id="wordCountDisplay" style="font-size:0.85rem; color:var(--text-muted);">字数:0</span>
+            <button class="btn btn-primary" id="btnGenerate" onclick="startGenerate()">✨ 开始写作</button>
+            <button class="btn btn-api" id="btnApiToggle" onclick="toggleSettings()">
+                🔑 <span id="apiStatusText">设置API</span>
+            </button>
         </div>
-        <!-- API设置面板 -->
+
+        <!-- API设置面板 (新增平台快捷选择) -->
         <div class="settings-panel" id="settingsPanel">
-            <h4 style="margin-bottom:8px; color:var(--accent);">🔌 AI API 设置</h4>
-            <label>API 密钥 (Key)</label>
+            <h3 style="margin-bottom:10px; color:var(--accent);">🔌 连接 AI 大脑</h3>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">
+                选择平台自动填充地址和模型，也可手动修改。
+            </p>
+            <label>🌐 快捷平台</label>
+            <select id="platformSelect" onchange="onPlatformChange()">
+                <option value="custom">自定义</option>
+                <option value="openai">OpenAI</option>
+                <option value="kimi">Kimi (Moonshot)</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="qwen">通义千问 (阿里)</option>
+                <option value="zhipu">智谱 (ChatGLM)</option>
+            </select>
+            <label>🔑 API 密钥</label>
             <input type="password" id="apiKeyInput" placeholder="sk-...">
             <small>密钥仅保存在你的浏览器本地</small>
-            <label>接口地址 (Base URL)</label>
-            <input type="text" id="apiBaseInput" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1">
-            <label>模型名称</label>
-            <select id="modelSelect">
-                <option value="gpt-4o">GPT-4o</option>
-                <option value="gpt-4o-mini">GPT-4o-mini (更快更省)</option>
-                <option value="gpt-3.5-turbo">GPT-3.5-turbo</option>
+            <label>🔗 接口地址 (Base URL)</label>
+            <input type="text" id="apiBaseInput" value="https://api.openai.com/v1">
+            <label>🧠 模型名称</label>
+            <select id="modelSelect" onchange="onModelSelectChange()">
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
                 <option value="custom">自定义模型</option>
             </select>
             <input type="text" id="customModelInput" placeholder="输入模型ID" style="display:none; margin-top:4px;">
-            <small>支持所有兼容OpenAI接口的服务（如DeepSeek、通义千问等）</small>
             <div style="display:flex; gap:8px; margin-top:12px;">
-                <button class="btn btn-primary btn-sm" onclick="saveAPISettings()">💾 保存设置</button>
-                <button class="btn btn-ghost btn-sm" onclick="testAPIConnection()">🔍 测试连接</button>
+                <button class="btn btn-primary" onclick="saveAPISettings()">💾 保存设置</button>
+                <button class="btn btn-outline" onclick="testAPIConnection()">🔍 测试连接</button>
             </div>
-            <div id="apiStatus" style="font-size:0.7rem; margin-top:6px;"></div>
+            <div id="apiStatusMsg" style="font-size:0.7rem; margin-top:6px;"></div>
         </div>
 
         <div class="content-area">
             <div class="prompt-section">
                 <textarea class="prompt-input" id="promptInput" rows="2" placeholder="告诉墨灵你想写什么..."></textarea>
                 <div class="param-chips">
-                    <span class="chip-label">风格:</span>
-                    <span class="chip" data-param="style" data-val="academic" onclick="toggleChip(this)">学术严谨</span>
-                    <span class="chip" data-param="style" data-val="literary" onclick="toggleChip(this)">文学优美</span>
-                    <span class="chip selected" data-param="style" data-val="natural" onclick="toggleChip(this)">自然流畅</span>
-                    <span class="chip" data-param="style" data-val="humorous" onclick="toggleChip(this)">幽默风趣</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-muted);">风格:</span>
+                    <span class="chip" data-param="style" data-val="academic" onclick="toggleChip(this)">学术</span>
+                    <span class="chip" data-param="style" data-val="literary" onclick="toggleChip(this)">文学</span>
+                    <span class="chip selected" data-param="style" data-val="natural" onclick="toggleChip(this)">自然</span>
+                    <span class="chip" data-param="style" data-val="humorous" onclick="toggleChip(this)">幽默</span>
                     <span style="margin:0 4px;">·</span>
-                    <span class="chip-label">字数:</span>
-                    <span class="chip" data-param="length" data-val="short" onclick="toggleChip(this)">短篇 ~500字</span>
-                    <span class="chip selected" data-param="length" data-val="medium" onclick="toggleChip(this)">中篇 ~1500字</span>
-                    <span class="chip" data-param="length" data-val="long" onclick="toggleChip(this)">长篇 ~3000字</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-muted);">字数:</span>
+                    <span class="chip" data-param="length" data-val="short" onclick="setLength('short', this)">短篇(~500)</span>
+                    <span class="chip selected" data-param="length" data-val="medium" onclick="setLength('medium', this)">中篇(~1500)</span>
+                    <span class="chip" data-param="length" data-val="long" onclick="setLength('long', this)">长篇(~3000)</span>
+                    <span class="chip custom-length" id="customLengthChip" onclick="activateCustomLength()">
+                        自定义
+                        <input type="number" id="customLengthInput" placeholder="字数" min="50" max="20000" style="display:none;" onkeydown="if(event.key==='Enter') confirmCustomLength()" onblur="confirmCustomLength()">
+                    </span>
                     <span style="margin:0 4px;">·</span>
-                    <span class="chip-label">创意:</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-muted);">创意:</span>
                     <span class="chip" data-param="creativity" data-val="conservative" onclick="toggleChip(this)">保守</span>
                     <span class="chip selected" data-param="creativity" data-val="balanced" onclick="toggleChip(this)">平衡</span>
                     <span class="chip" data-param="creativity" data-val="creative" onclick="toggleChip(this)">大胆</span>
@@ -181,7 +201,7 @@
                     <button onclick="insertMarkdown('**','**')"><b>B</b></button>
                     <button onclick="insertMarkdown('*','*')"><i>I</i></button>
                     <button onclick="insertMarkdown('\n## ','')">H</button>
-                    <span style="margin-left:auto; font-size:0.7rem;">Markdown 支持</span>
+                    <span style="margin-left:auto; font-size:0.7rem; color:var(--text-muted);">Markdown</span>
                 </div>
                 <textarea class="editor-textarea" id="editorTextarea" placeholder="AI生成的内容将出现在这里..." oninput="updateWordCount()"></textarea>
             </div>
@@ -192,26 +212,34 @@
 
     <script>
         (function() {
-            // ========== 状态管理 ==========
+            // 状态管理
             const state = {
                 currentType: 'essay',
                 isGenerating: false,
-                selectedParams: { style: 'natural', length: 'medium', creativity: 'balanced' },
+                selectedParams: {
+                    style: 'natural',
+                    length: 'medium', // 可能为 'short','medium','long' 或数字字符串如 "2000"
+                    creativity: 'balanced'
+                },
                 history: [],
                 api: {
+                    platform: 'custom',
                     key: '',
                     baseURL: 'https://api.openai.com/v1',
-                    model: 'gpt-4o-mini',
+                    model: 'gpt-4o-mini'
                 }
             };
 
-            // 从localStorage加载API设置
+            // 从本地存储恢复设置
             try {
-                const saved = JSON.parse(localStorage.getItem('moli_api_settings'));
-                if (saved) state.api = { ...state.api, ...saved };
+                const savedApi = JSON.parse(localStorage.getItem('moli_api'));
+                if (savedApi) state.api = { ...state.api, ...savedApi };
+            } catch(e) {}
+            try {
+                const savedParams = JSON.parse(localStorage.getItem('moli_params'));
+                if (savedParams) state.selectedParams = savedParams;
             } catch(e) {}
 
-            // DOM
             const $ = s => document.querySelector(s);
             const editor = $('#editorTextarea');
             const promptInput = $('#promptInput');
@@ -221,6 +249,10 @@
             const avatarCircle = $('#avatarCircle');
             const statusDot = $('#statusDot');
             const toastCont = $('#toastContainer');
+            const apiStatusText = $('#apiStatusText');
+            const btnApiToggle = $('#btnApiToggle');
+            const customLengthChip = $('#customLengthChip');
+            const customLengthInput = $('#customLengthInput');
 
             // 工具
             const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -279,7 +311,7 @@
                     script:{style:'natural',length:'medium',creativity:'creative'}
                 };
                 state.selectedParams = {...defaults[type] || {style:'natural',length:'medium',creativity:'balanced'}};
-                updateChipsUI();
+                updateParamsUI();
                 const placeholders = {
                     essay:'例如：写一篇关于"数字时代隐私保护"的学术论文大纲',
                     novel:'例如：创作一个架空奇幻世界的开篇',
@@ -291,109 +323,253 @@
                 promptInput.placeholder = placeholders[type] || '告诉墨灵你想写什么...';
                 showToast(`已切换至「${btn.textContent.trim()}」模式`);
             };
-            const updateChipsUI = () => {
-                document.querySelectorAll('.chip[data-param]').forEach(c=>{
-                    c.classList.toggle('selected', state.selectedParams[c.dataset.param]===c.dataset.val);
-                });
-            };
+
+            // 参数切换 (风格、创意)
             window.toggleChip = chip => {
                 const param = chip.dataset.param;
                 const val = chip.dataset.val;
+                if (param === 'length') return; // 字数单独处理
                 document.querySelectorAll(`.chip[data-param="${param}"]`).forEach(c=>c.classList.remove('selected'));
                 chip.classList.add('selected');
                 state.selectedParams[param] = val;
+                localStorage.setItem('moli_params', JSON.stringify(state.selectedParams));
                 showToast(`已选择: ${chip.textContent.trim()}`);
             };
 
-            // 编辑器操作
-            window.insertMarkdown = (before,after) => {
-                const start = editor.selectionStart, end = editor.selectionEnd;
-                editor.setRangeText(before+editor.value.substring(start,end)+after, start, end, 'select');
-                editor.focus(); updateWordCount();
+            // 自定义字数模块
+            window.setLength = (length, chip) => {
+                // 移除所有长度 chips 的选中状态
+                document.querySelectorAll(`.chip[data-param="length"]`).forEach(c=>c.classList.remove('selected'));
+                if (length === 'custom') {
+                    // 激活自定义输入
+                    customLengthChip.classList.add('selected');
+                    customLengthInput.style.display = 'inline-block';
+                    customLengthInput.focus();
+                    // 不清除已有数字
+                } else {
+                    chip.classList.add('selected');
+                    customLengthChip.classList.remove('selected');
+                    customLengthInput.style.display = 'none';
+                    state.selectedParams.length = length;
+                }
+                localStorage.setItem('moli_params', JSON.stringify(state.selectedParams));
             };
-            window.clearEditor = () => {
-                if(editor.value.trim() && !confirm('确定清空所有内容吗？')) return;
-                editor.value = ''; $('#docTitle').value = ''; updateWordCount(); aiBubble.innerHTML = '';
+
+            window.activateCustomLength = () => {
+                if (customLengthChip.classList.contains('selected')) {
+                    // 再次点击取消自定义，回到中篇
+                    setLength('medium', document.querySelector('.chip[data-param="length"][data-val="medium"]'));
+                    return;
+                }
+                setLength('custom', null);
             };
-            window.exportContent = () => {
-                if(!editor.value.trim()) return showToast('编辑器为空');
-                const blob = new Blob([editor.value], {type:'text/plain;charset=utf-8'});
-                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-                a.download = ($('#docTitle').value||'未命名')+'.txt'; a.click();
-                showToast('✅ 已导出');
+
+            window.confirmCustomLength = () => {
+                const val = parseInt(customLengthInput.value);
+                if (val && val >= 50 && val <= 20000) {
+                    state.selectedParams.length = val.toString();
+                    customLengthChip.classList.add('selected');
+                    // 更新显示
+                    customLengthChip.childNodes[0].textContent = `自定义${val}字 `;
+                    showToast(`字数已设为 ${val} 字`);
+                } else if (customLengthInput.value.trim() !== '') {
+                    showToast('字数范围50-20000，请输入有效数字');
+                    customLengthInput.value = '';
+                }
+                // 保存
+                localStorage.setItem('moli_params', JSON.stringify(state.selectedParams));
             };
-            window.showHistory = () => {
-                if(!state.history.length) return showToast('暂无历史记录');
-                const list = state.history.slice(0,8).map((h,i)=>`${i+1}. [${h.type}] ${h.title} - ${h.date}\n   ${h.preview}`).join('\n\n');
-                const idx = prompt(`📋 历史记录（共${state.history.length}条）\n输入序号加载，0取消：\n\n${list}`);
-                if(idx && !isNaN(idx) && idx>0 && idx<=state.history.length){
-                    const h = state.history[idx-1];
-                    editor.value = h.content; $('#docTitle').value = h.title;
-                    state.currentType = h.type; updateWordCount(); updateChipsUI();
-                    showToast(`已加载：${h.title}`);
+
+            const updateParamsUI = () => {
+                // 更新风格、创意 chips
+                document.querySelectorAll('.chip[data-param="style"], .chip[data-param="creativity"]').forEach(c=>{
+                    c.classList.toggle('selected', c.dataset.val === state.selectedParams[c.dataset.param]);
+                });
+                // 更新长度 chips
+                const lenVal = state.selectedParams.length;
+                document.querySelectorAll('.chip[data-param="length"]').forEach(c=>c.classList.remove('selected'));
+                if (lenVal === 'short' || lenVal === 'medium' || lenVal === 'long') {
+                    const chip = document.querySelector(`.chip[data-param="length"][data-val="${lenVal}"]`);
+                    if (chip) chip.classList.add('selected');
+                    customLengthChip.classList.remove('selected');
+                    customLengthInput.style.display = 'none';
+                } else {
+                    // 自定义数字
+                    customLengthChip.classList.add('selected');
+                    customLengthInput.style.display = 'inline-block';
+                    customLengthInput.value = lenVal;
+                    customLengthChip.childNodes[0].textContent = `自定义${lenVal}字 `;
                 }
             };
 
-            // ========== API 设置 ==========
-            window.toggleSettings = () => $('#settingsPanel').classList.toggle('active');
-            document.getElementById('modelSelect').addEventListener('change', function(){
-                document.getElementById('customModelInput').style.display = this.value==='custom' ? 'block' : 'none';
-            });
-            window.saveAPISettings = () => {
-                state.api.key = $('#apiKeyInput').value.trim();
-                state.api.baseURL = $('#apiBaseInput').value.trim().replace(/\/+$/,'');
-                const modelSel = $('#modelSelect').value;
-                state.api.model = modelSel==='custom' ? $('#customModelInput').value.trim() : modelSel;
-                localStorage.setItem('moli_api_settings', JSON.stringify(state.api));
-                showToast('✅ API设置已保存');
-                $('#settingsPanel').classList.remove('active');
+            // API 平台切换
+            const platforms = {
+                openai: { base: 'https://api.openai.com/v1', models: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'], defaultModel: 'gpt-4o-mini' },
+                kimi: { base: 'https://api.moonshot.cn/v1', models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'], defaultModel: 'moonshot-v1-8k' },
+                deepseek: { base: 'https://api.deepseek.com/v1', models: ['deepseek-chat', 'deepseek-reasoner'], defaultModel: 'deepseek-chat' },
+                qwen: { base: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen-turbo', 'qwen-plus', 'qwen-max'], defaultModel: 'qwen-plus' },
+                zhipu: { base: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4-flash', 'glm-4', 'glm-4-plus'], defaultModel: 'glm-4-flash' }
             };
+
+            window.onPlatformChange = () => {
+                const platform = $('#platformSelect').value;
+                state.api.platform = platform;
+                if (platform === 'custom') {
+                    // 保留当前填写值
+                    return;
+                }
+                const p = platforms[platform];
+                if (p) {
+                    $('#apiBaseInput').value = p.base;
+                    // 更新模型下拉框
+                    const modelSelect = $('#modelSelect');
+                    modelSelect.innerHTML = '';
+                    p.models.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m;
+                        opt.textContent = m;
+                        modelSelect.appendChild(opt);
+                    });
+                    // 添加自定义选项
+                    const customOpt = document.createElement('option');
+                    customOpt.value = 'custom';
+                    customOpt.textContent = '自定义模型';
+                    modelSelect.appendChild(customOpt);
+                    modelSelect.value = p.defaultModel;
+                    $('#customModelInput').style.display = 'none';
+                }
+            };
+
+            window.onModelSelectChange = () => {
+                if ($('#modelSelect').value === 'custom') {
+                    $('#customModelInput').style.display = 'block';
+                    $('#customModelInput').focus();
+                } else {
+                    $('#customModelInput').style.display = 'none';
+                }
+            };
+
+            // 初始化设置面板
+            const initSettingsPanel = () => {
+                // 根据已保存的 api 设置恢复界面
+                if (state.api.platform && state.api.platform !== 'custom') {
+                    $('#platformSelect').value = state.api.platform;
+                    onPlatformChange(); // 会填充 models
+                    // 再覆盖模型值
+                    if (state.api.model) {
+                        if ($('#modelSelect').querySelector(`option[value="${state.api.model}"]`)) {
+                            $('#modelSelect').value = state.api.model;
+                        } else {
+                            $('#modelSelect').value = 'custom';
+                            $('#customModelInput').style.display = 'block';
+                            $('#customModelInput').value = state.api.model;
+                        }
+                    }
+                } else {
+                    $('#platformSelect').value = 'custom';
+                    // 恢复 baseURL 和 model
+                    $('#apiBaseInput').value = state.api.baseURL;
+                    if (state.api.model) {
+                        if ($('#modelSelect').querySelector(`option[value="${state.api.model}"]`)) {
+                            $('#modelSelect').value = state.api.model;
+                        } else {
+                            $('#modelSelect').value = 'custom';
+                            $('#customModelInput').style.display = 'block';
+                            $('#customModelInput').value = state.api.model;
+                        }
+                    }
+                }
+                if (state.api.key) {
+                    $('#apiKeyInput').value = state.api.key.substring(0,5) + '...';
+                }
+            };
+
+            window.toggleSettings = () => {
+                $('#settingsPanel').classList.toggle('active');
+                $('#overlayBg').classList.toggle('active');
+                if ($('#settingsPanel').classList.contains('active')) {
+                    initSettingsPanel();
+                }
+            };
+            window.closeSettings = () => {
+                $('#settingsPanel').classList.remove('active');
+                $('#overlayBg').classList.remove('active');
+            };
+
+            window.saveAPISettings = () => {
+                state.api.platform = $('#platformSelect').value;
+                state.api.baseURL = $('#apiBaseInput').value.trim().replace(/\/+$/, '');
+                const modelSelect = $('#modelSelect');
+                state.api.model = modelSelect.value === 'custom' ? $('#customModelInput').value.trim() : modelSelect.value;
+                const keyInput = $('#apiKeyInput').value.trim();
+                if (keyInput && !keyInput.startsWith('...')) {
+                    state.api.key = keyInput;
+                }
+                localStorage.setItem('moli_api', JSON.stringify(state.api));
+                // 更新顶部按钮状态
+                if (state.api.key) {
+                    apiStatusText.textContent = '已连接';
+                    btnApiToggle.classList.add('active');
+                } else {
+                    apiStatusText.textContent = '设置API';
+                    btnApiToggle.classList.remove('active');
+                }
+                showToast('✅ API设置已保存');
+                closeSettings();
+            };
+
             window.testAPIConnection = async () => {
                 const key = $('#apiKeyInput').value.trim();
-                if(!key) return showToast('请先输入API密钥');
-                const statusDiv = $('#apiStatus');
+                const base = $('#apiBaseInput').value.trim().replace(/\/+$/, '');
+                if (!key || key.startsWith('...')) {
+                    // 使用已保存的 key
+                    if (!state.api.key) return showToast('请先输入有效的API密钥');
+                }
+                const finalKey = key.startsWith('...') ? state.api.key : key;
+                const statusDiv = $('#apiStatusMsg');
                 statusDiv.textContent = '测试中...';
                 try {
-                    const res = await fetch(`${state.api.baseURL}/models`, {
-                        headers: { 'Authorization': `Bearer ${key}` }
+                    const res = await fetch(`${base}/models`, {
+                        headers: { 'Authorization': `Bearer ${finalKey}` }
                     });
-                    if(res.ok) statusDiv.textContent = '✅ 连接成功！';
-                    else statusDiv.textContent = `❌ 错误 ${res.status}`;
-                } catch(e) { statusDiv.textContent = '❌ 网络错误'; }
-            };
-            // 初始化界面显示已保存的key（部分隐藏）
-            if(state.api.key) {
-                $('#apiKeyInput').value = state.api.key.substring(0,5)+'...';
-                $('#apiBaseInput').value = state.api.baseURL;
-                if(['gpt-4o','gpt-4o-mini','gpt-3.5-turbo'].includes(state.api.model)) {
-                    $('#modelSelect').value = state.api.model;
-                } else {
-                    $('#modelSelect').value = 'custom';
-                    $('#customModelInput').style.display='block';
-                    $('#customModelInput').value = state.api.model;
+                    if (res.ok) {
+                        statusDiv.textContent = '✅ 连接成功！';
+                        showToast('API 连接正常');
+                    } else {
+                        const err = await res.text();
+                        statusDiv.textContent = `❌ 错误 ${res.status}: ${err.substring(0,100)}`;
+                    }
+                } catch(e) {
+                    statusDiv.textContent = '❌ 网络错误';
                 }
-            }
+            };
 
-            // ========== 核心生成（支持真实API） ==========
-            const generateWithRealAPI = async (prompt, length, style, creativity, type) => {
-                // 构建系统消息
-                const typeNames = { essay:'学术论文', novel:'小说', prose:'散文', poetry:'诗歌', copywriting:'商业文案', script:'剧本' };
+            // 核心生成
+            const generateWithAPI = async (prompt) => {
                 const styleMap = { academic:'严谨学术', literary:'优美文学', natural:'自然流畅', humorous:'幽默风趣' };
                 const creativityMap = { conservative:'保守', balanced:'平衡', creative:'富有创意' };
-                const lengthMap = { short:'约500字', medium:'约1500字', long:'约3000字' };
+                const typeNames = { essay:'学术论文', novel:'小说', prose:'散文', poetry:'诗歌', copywriting:'商业文案', script:'剧本' };
+                const length = state.selectedParams.length;
+                let lengthInstruction = '';
+                if (length === 'short') lengthInstruction = '约500字';
+                else if (length === 'medium') lengthInstruction = '约1500字';
+                else if (length === 'long') lengthInstruction = '约3000字';
+                else lengthInstruction = `约${length}字`; // 自定义数字
 
-                const systemPrompt = `你是一位专业作家，擅长${typeNames[type]}写作。请根据用户要求创作，风格：${styleMap[style]}，创意程度：${creativityMap[creativity]}。必须严格将字数控制在${lengthMap[length]}左右。直接输出内容，不要多余的解释。`;
-                const userPrompt = `写作主题：${prompt}\n请严格按照字数要求创作。`;
-
+                const systemPrompt = `你是一位专业作家，擅长${typeNames[state.currentType]}写作。风格：${styleMap[state.selectedParams.style]}。创意度：${creativityMap[state.selectedParams.creativity]}。请严格将输出字数控制在${lengthInstruction}左右。直接输出内容，不要任何解释。`;
                 const body = {
                     model: state.api.model,
                     messages: [
                         { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt }
+                        { role: "user", content: prompt }
                     ],
-                    temperature: creativity==='creative'?0.9: (creativity==='conservative'?0.3:0.7),
-                    max_tokens: length==='short'?600: (length==='medium'?1800:3500),
+                    temperature: state.selectedParams.creativity==='creative'?0.9: (state.selectedParams.creativity==='conservative'?0.3:0.7),
                 };
+                // 粗略 max_tokens 估算：1汉字约2 token
+                if (length === 'short') body.max_tokens = 1200;
+                else if (length === 'medium') body.max_tokens = 3500;
+                else if (length === 'long') body.max_tokens = 7000;
+                else body.max_tokens = Math.ceil(parseInt(length) * 2.5);
 
                 const response = await fetch(`${state.api.baseURL}/chat/completions`, {
                     method: 'POST',
@@ -403,7 +579,6 @@
                     },
                     body: JSON.stringify(body)
                 });
-
                 if (!response.ok) {
                     const err = await response.text();
                     throw new Error(`API错误 ${response.status}: ${err}`);
@@ -412,17 +587,18 @@
                 return data.choices[0].message.content;
             };
 
-            // 模拟生成（后备）
             const generateMock = (prompt) => {
                 const topic = prompt.replace(/[写一篇|创作|请|帮我|关于]/g,'').trim().substring(0,20)||'未命名';
                 const t = state.currentType;
-                if(t==='essay') return `# ${topic}\n\n## 摘要\n本文围绕"${topic}"展开系统分析...\n\n## 引言\n在当前背景下，${topic}已成为重要课题...`;
-                if(t==='novel') return `# ${topic}\n\n秋风渐起，梧桐叶落了一地。他站在老宅门前，钥匙在手中握得温热...`;
-                if(t==='prose') return `# ${topic}\n\n小镇的清晨总是慢半拍。石板路湿漉漉的，倒映着天光...`;
-                if(t==='poetry') return `# ${topic}\n\n月光洒在旧书页上，\n字迹模糊成一片海。`;
-                if(t==='copywriting') return `# ${topic} 文案\n\n**极致体验** · **匠心设计**\n${topic}，让生活更有温度。`;
-                if(t==='script') return `# ${topic}\n\n【咖啡馆·傍晚】\n沈默：我以为你不会来了。\n苏晚：雨太大了。`;
-                return `# ${topic}\n\n这里是关于${topic}的创作...`;
+                const base = {
+                    essay: `# ${topic}\n\n## 摘要\n本文围绕"${topic}"展开系统分析...`,
+                    novel: `# ${topic}\n\n秋风渐起，梧桐叶落。他站在老宅门前...`,
+                    prose: `# ${topic}\n\n小镇的清晨总是慢半拍。石板路湿漉漉的...`,
+                    poetry: `# ${topic}\n\n月光洒在旧书页上，\n字迹模糊成一片海。`,
+                    copywriting: `# ${topic} 文案\n\n**极致体验** · **匠心设计**\n${topic}，让生活更有温度。`,
+                    script: `# ${topic}\n\n【咖啡馆·傍晚】\n沈默：我以为你不会来了。\n苏晚：雨太大了。`
+                };
+                return base[t] || `# ${topic}\n\n创作中...`;
             };
 
             window.startGenerate = async () => {
@@ -439,23 +615,14 @@
 
                 try {
                     let content = '';
-                    // 优先使用真实API
                     if(state.api.key && state.api.key.length>5) {
                         addBubble('已连接AI，正在生成...');
-                        content = await generateWithRealAPI(
-                            prompt,
-                            state.selectedParams.length,
-                            state.selectedParams.style,
-                            state.selectedParams.creativity,
-                            state.currentType
-                        );
+                        content = await generateWithAPI(prompt);
                     } else {
-                        // 模拟生成
                         await sleep(1500);
                         content = generateMock(prompt);
                     }
-
-                    // 流式效果展示（逐字添加）
+                    // 流式显示
                     avatarCircle.classList.remove('thinking');
                     avatarCircle.classList.add('writing');
                     for(let i=0; i<content.length; i++) {
@@ -481,12 +648,13 @@
             };
 
             // 头像点击中止
-            document.getElementById('avatarContainer').addEventListener('click', ()=>{
+            $('#avatarContainer').addEventListener('click', ()=>{
                 if(state.isGenerating) {
-                    state.isGenerating = false; // 会中断循环
+                    state.isGenerating = false;
                     addBubble('⏸️ 已中止生成');
                 } else {
-                    addBubble(['嗨！今天写什么？','有灵感了吗？','需要帮助吗？'][Math.floor(Math.random()*3)]);
+                    const msgs = ['嗨！今天写什么？','有灵感了吗？','需要帮助吗？'];
+                    addBubble(msgs[Math.floor(Math.random()*msgs.length)]);
                 }
             });
 
@@ -496,11 +664,44 @@
                 if((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveHistory(); showToast('💾 已保存'); }
             });
 
+            // 编辑器功能
+            window.insertMarkdown = (before,after) => {
+                const start = editor.selectionStart, end = editor.selectionEnd;
+                editor.setRangeText(before+editor.value.substring(start,end)+after, start, end, 'select');
+                editor.focus(); updateWordCount();
+            };
+            window.clearEditor = () => {
+                if(editor.value.trim() && !confirm('确定清空吗？')) return;
+                editor.value = ''; $('#docTitle').value = ''; updateWordCount(); aiBubble.innerHTML = '';
+            };
+            window.exportContent = () => {
+                if(!editor.value.trim()) return showToast('编辑器为空');
+                const blob = new Blob([editor.value], {type:'text/plain;charset=utf-8'});
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = ($('#docTitle').value||'未命名')+'.txt'; a.click();
+                showToast('✅ 已导出');
+            };
+            window.showHistory = () => {
+                if(!state.history.length) return showToast('暂无历史记录');
+                const list = state.history.slice(0,8).map((h,i)=>`${i+1}. [${h.type}] ${h.title} - ${h.date}\n   ${h.preview}`).join('\n\n');
+                const idx = prompt(`📋 历史记录（共${state.history.length}条）\n输入序号加载，0取消：\n\n${list}`);
+                if(idx && !isNaN(idx) && idx>0 && idx<=state.history.length){
+                    const h = state.history[idx-1];
+                    editor.value = h.content; $('#docTitle').value = h.title;
+                    state.currentType = h.type; updateWordCount(); updateParamsUI();
+                    showToast(`已加载：${h.title}`);
+                }
+            };
+
             // 初始化
             loadHistory();
             updateWordCount();
-            window.closeSidebar = () => {}; // 占位
-            console.log('🖋️ 墨灵 AI 写作伙伴已就绪（支持真实API）');
+            updateParamsUI();
+            if (state.api.key) {
+                apiStatusText.textContent = '已连接';
+                btnApiToggle.classList.add('active');
+            }
+            console.log('🖋️ 墨灵 AI 写作伙伴 v2.0 已就绪');
         })();
     </script>
 </body>
